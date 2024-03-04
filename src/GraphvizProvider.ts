@@ -2,18 +2,14 @@ import {
 	workspace,
 	window,
 	commands,
-	ExtensionContext,
-	TextEditorSelectionChangeEvent,
-	TextDocumentChangeEvent,
 	TextDocumentContentProvider,
-	EventEmitter,
-	ViewColumn,
+	// EventEmitter,
+	// ViewColumn,
 	Uri,
 	Event,
-	Disposable,
 	TextDocument,
 	TextEditor
-} from "vscode";
+} from "coc.nvim";
 
 import * as path from "path";
 const Viz = require("viz.js");
@@ -22,12 +18,12 @@ export class GraphvizProvider implements TextDocumentContentProvider {
 	static scheme = "graphviz-preview";
 
 	private resultText = "";
-	private lastPreviewHTML: string | Thenable<string> | undefined = undefined;
-	private lastURI: Uri | undefined = undefined;
+	private lastPreviewHTML: string | Promise<string> | undefined = undefined;
+	private lastURI: string | Uri | undefined = undefined;
 	private needsRebuild: boolean = true;
 	private editorDocument: TextDocument | undefined = undefined;
 
-	public _onDidChange = new EventEmitter<Uri>();
+	// public _onDidChange = new EventEmitter<Uri>();
 	public refreshInterval = 1000;
 
 	private resolveDocument(uri: Uri): TextDocument {
@@ -41,20 +37,20 @@ export class GraphvizProvider implements TextDocumentContentProvider {
 		}
 	}
 
-	public provideTextDocumentContent(uri: Uri): string | Thenable<string> {
+	public provideTextDocumentContent(uri: Uri): string | Promise<string> {
 		const doc = this.resolveDocument(uri);
 		return this.createAsciiDocHTML(doc);
 	}
 
-	get onDidChange(): Event<Uri> {
-		return this._onDidChange.event;
-	}
+	// get onDidChange(): Event<Uri> {
+	// 	return this._onDidChange.event;
+	// }
 
 	public update(uri: Uri) {
-		this._onDidChange.fire(uri);
+		// this._onDidChange.fire(uri);
 	}
 
-	private createAsciiDocHTML(doc: TextDocument): string | Thenable<string> {
+	private createAsciiDocHTML(doc: TextDocument): string | Promise<string> {
 		// const editor = window.activeTextEditor;
 
 		if (!doc || !(doc.languageId === "dot")) {
@@ -86,7 +82,7 @@ export class GraphvizProvider implements TextDocumentContentProvider {
 		this.needsRebuild = true;
 	}
 
-	public preview(doc: TextDocument): Thenable<string> {
+	public preview(doc: TextDocument): Promise<string> {
 		const text = doc.getText();
 		return new Promise<string>((resolve, reject) => {
 			var svg = Viz(text);
@@ -97,7 +93,7 @@ export class GraphvizProvider implements TextDocumentContentProvider {
 }
 
 function timerCallback(timer: NodeJS.Timer, provider: GraphvizProvider, editor: TextEditor, previewUri: Uri) {
-	provider._onDidChange.fire(previewUri);
+	// provider._onDidChange.fire(previewUri);
 }
 
 export function createRefreshTimer(provider: GraphvizProvider, editor: TextEditor, previewUri: Uri) {
@@ -113,16 +109,16 @@ export function createRefreshTimer(provider: GraphvizProvider, editor: TextEdito
 
 export function makePreviewUri(doc: TextDocument): Uri {
 	// TODO: Escape?
-	return Uri.parse(`graphviz-preview://preview/${doc.fileName}`);
+	return Uri.parse(`graphviz-preview://${Uri.parse(doc.uri).fsPath}`);
 }
 
-export function createHTMLWindow(provider: GraphvizProvider, displayColumn: ViewColumn): PromiseLike<void> {
-	const previewTitle = `Preview: "${path.basename(window.activeTextEditor.document.fileName)}"`;
-	const previewUri = makePreviewUri(window.activeTextEditor.document);
+export function createHTMLWindow(provider: GraphvizProvider/* , displayColumn: ViewColumn */): PromiseLike<void> {
+	// const previewTitle = `Preview: "${path.basename(window.activeTextEditor.document.fileName)}"`;
+	const previewUri = makePreviewUri(window.activeTextEditor.document.textDocument);
 
 	createRefreshTimer(provider, window.activeTextEditor, previewUri);
 
-	return commands.executeCommand("vscode.previewHtml", previewUri, displayColumn)
+	return commands.executeCommand("vscode.previewHtml", previewUri/* , displayColumn */)
 		.then((success) => {}, (reason) => {
 			console.warn(reason);
 			window.showErrorMessage(reason);

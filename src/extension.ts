@@ -1,25 +1,26 @@
 import {
 	window,
 	workspace,
+	services,
 	ExtensionContext,
-	Disposable,
-	TextDocumentChangeEvent,
-	ViewColumn,
+	// Disposable,
+	DidChangeTextDocumentParams,
+	// ViewColumn,
 	TextDocument,
-	TextEditorSelectionChangeEvent,
+	// TextEditorSelectionChangeEvent,
 	commands
-} from "vscode";
+} from "coc.nvim";
 
 import {
 	LanguageClient,
 	LanguageClientOptions,
-} from "vscode-languageclient";
+} from "coc.nvim";
 
 import * as gvp from "./GraphvizProvider";
 
 export function activate(context: ExtensionContext) {
 	const lc = createLanguageClient();
-	const lcDisposable = lc.start();
+	const lcDisposable = services.registLanguageClient(lc);
 
 	const gvProviders = createGraphvizProviders();
 
@@ -60,66 +61,66 @@ function createLanguageClient() {
  */
 function createGraphvizProviders() {
 	const provider = new gvp.GraphvizProvider();
-	const providerRegistrations = Disposable.from(
+	const providerRegistrations = /* Disposable.from( */
 		workspace.registerTextDocumentContentProvider(
 			gvp.GraphvizProvider.scheme,
 			provider
 		)
-	);
+	/* ) */;
 
 	// When the active document is changed set the provider for rebuild
 	// this only occurs after an edit in a document
-	workspace.onDidChangeTextDocument((e: TextDocumentChangeEvent) => {
-		if (e.document === window.activeTextEditor.document) {
+	workspace.onDidChangeTextDocument((e: DidChangeTextDocumentParams) => {
+		if (e.textDocument === window.activeTextEditor.document.textDocument) {
 			provider.setNeedsRebuild(true);
 		}
 	});
 
 	// This occurs whenever the selected document changes, its useful to keep the
-	window.onDidChangeTextEditorSelection(
-		(e: TextEditorSelectionChangeEvent) => {
-			if (
-				!!e &&
-				!!e.textEditor &&
-				e.textEditor === window.activeTextEditor
-			) {
-				provider.setNeedsRebuild(true);
-			}
-		}
-	);
+	// window.onDidChangeTextEditorSelection(
+	// 	(e: TextEditorSelectionChangeEvent) => {
+	// 		if (
+	// 			!!e &&
+	// 			!!e.textEditor &&
+	// 			e.textEditor === window.activeTextEditor
+	// 		) {
+	// 			provider.setNeedsRebuild(true);
+	// 		}
+	// 	}
+	// );
 
 	workspace.onDidSaveTextDocument((e: TextDocument) => {
-		if (e === window.activeTextEditor.document) {
+		if (e === window.activeTextEditor.document.textDocument) {
 			provider.update(gvp.makePreviewUri(e));
 		}
 	});
 
-	const previewToSide = commands.registerCommand(
-		"graphviz.previewToSide",
-		() => {
-			const displayColumn = getDisplayColumn(
-				window.activeTextEditor.viewColumn
-			);
-			return gvp.createHTMLWindow(provider, displayColumn);
-		}
-	);
+	// const previewToSide = commands.registerCommand(
+	// 	"graphviz.previewToSide",
+	// 	() => {
+	// 		const displayColumn = getDisplayColumn(
+	// 			window.activeTextEditor.viewColumn
+	// 		);
+	// 		return gvp.createHTMLWindow(provider, displayColumn);
+	// 	}
+	// );
 
 	const preview = commands.registerCommand("graphviz.preview", () => {
 		return gvp.createHTMLWindow(
 			provider,
-			window.activeTextEditor.viewColumn
+			// window.activeTextEditor.viewColumn
 		);
 	});
 
-	return [previewToSide, preview, providerRegistrations];
+	return [/* previewToSide, */ preview, providerRegistrations];
 }
 
-function getDisplayColumn(viewColumn: ViewColumn) {
-	switch (viewColumn) {
-		case ViewColumn.One:
-			return ViewColumn.Two;
-		case ViewColumn.Two:
-		case ViewColumn.Three:
-			return ViewColumn.Three;
-	}
-}
+// function getDisplayColumn(viewColumn: ViewColumn) {
+// 	switch (viewColumn) {
+// 		case ViewColumn.One:
+// 			return ViewColumn.Two;
+// 		case ViewColumn.Two:
+// 		case ViewColumn.Three:
+// 			return ViewColumn.Three;
+// 	}
+// }
