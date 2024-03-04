@@ -1,3 +1,5 @@
+yarn.lock
+.pnp.cjs
 out/*
 *.js.map
 node_modules/
