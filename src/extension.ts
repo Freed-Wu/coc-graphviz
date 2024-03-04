@@ -1,3 +1,4 @@
+import {resolve} from 'path';
 import {
 	window,
 	workspace,
@@ -7,11 +8,13 @@ import {
 	DidChangeTextDocumentParams,
 	// ViewColumn,
 	TextDocument,
+	TransportKind,
 	// TextEditorSelectionChangeEvent,
 	commands
 } from "coc.nvim";
 
 import {
+	ServerOptions,
 	LanguageClient,
 	LanguageClientOptions,
 } from "coc.nvim";
@@ -19,7 +22,8 @@ import {
 import * as gvp from "./GraphvizProvider";
 
 export function activate(context: ExtensionContext) {
-	const lc = createLanguageClient();
+	let serverModule = resolve(context.extensionPath, 'out', 'src', 'server')
+	const lc = createLanguageClient(serverModule);
 	const lcDisposable = services.registLanguageClient(lc);
 
 	const gvProviders = createGraphvizProviders();
@@ -27,10 +31,22 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(lcDisposable, ...gvProviders);
 }
 
-function createLanguageClient() {
-	const serverOptions = {
-		command: "dot-language-server",
-		args: ["--stdio"],
+function createLanguageClient(serverModule: string) {
+	const serverOptions: ServerOptions = {
+		run : {
+			module: serverModule,
+			transport: TransportKind.ipc,
+		},
+		debug: {
+			module: serverModule,
+			transport: TransportKind.ipc,
+			options: {
+				execArgv: [
+					"--nolazy",
+					"--debug=6009"
+				]
+			}
+		},
 
 		// Type assertion because of unreleased patch
 		// https://github.com/Microsoft/vscode-languageserver-node/issues/358

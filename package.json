@@ -127,6 +127,7 @@
     "update-vscode": "node ./node_modules/vscode/bin/install"
   },
   "dependencies": {
+    "dot-language-server": "^1.2.0",
     "viz.js": "^1.8.2"
   },
   "devDependencies": {
