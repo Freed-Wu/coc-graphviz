@@ -20,11 +20,12 @@ import {
     window,
     commands,
     ExtensionContext,
-    ViewColumn,
-    TextDocumentChangeEvent,
+    // ViewColumn,
+    // TextDocumentChangeEvent,
+    DidChangeTextDocumentParams,
     TextDocument,
     Uri
-} from 'vscode';
+} from 'coc.nvim';
 
 import { GraphvizPreviewGenerator } from './GraphvizPreviewGenerator';
 
@@ -36,41 +37,41 @@ export function activate(context: ExtensionContext) {
 
     // When the active document is changed set the provider for rebuild
     // this only occurs after an edit in a document
-    context.subscriptions.push(workspace.onDidChangeTextDocument((e: TextDocumentChangeEvent) => {
-        if (e.document.languageId === DOT) {
-            graphvizPreviewGenerator.setNeedsRebuild(e.document.uri, true);
-        }
+    context.subscriptions.push(workspace.onDidChangeTextDocument((e: DidChangeTextDocumentParams/* TextDocumentChangeEvent */) => {
+        // if (e.document.languageId === DOT) {
+            graphvizPreviewGenerator.setNeedsRebuild(Uri.parse(e.textDocument/* document */.uri), true);
+        // }
     }));
 
     context.subscriptions.push(workspace.onDidSaveTextDocument((doc: TextDocument) => {
         if (doc.languageId === DOT) {
-            graphvizPreviewGenerator.setNeedsRebuild(doc.uri, true);
+            graphvizPreviewGenerator.setNeedsRebuild(Uri.parse(doc.uri), true);
         }
     }))
 
-    let previewToSide = commands.registerCommand("graphviz.previewToSide", async (dotDocumentUri: Uri) => {
-        let dotDocument = await getDotDocument(dotDocumentUri);
-        if (dotDocument) {
-            return graphvizPreviewGenerator.revealOrCreatePreview(dotDocument, ViewColumn.Beside);
-        }
-    })
+    // let previewToSide = commands.registerCommand("graphviz.previewToSide", async (dotDocumentUri: Uri) => {
+    //     let dotDocument = await getDotDocument(dotDocumentUri);
+    //     if (dotDocument) {
+    //         return graphvizPreviewGenerator.revealOrCreatePreview(dotDocument, ViewColumn.Beside);
+    //     }
+    // })
 
     let preview = commands.registerCommand("graphviz.preview", async (dotDocumentUri: Uri) => {
         let dotDocument = await getDotDocument(dotDocumentUri);
         if (dotDocument) {
-            return graphvizPreviewGenerator.revealOrCreatePreview(dotDocument, window.activeTextEditor?.viewColumn ?? ViewColumn.Active);
+            return graphvizPreviewGenerator.revealOrCreatePreview(dotDocument, {openURL: true}/* window.activeTextEditor?.viewColumn ?? ViewColumn.Active */);
         }
     })
 
-    context.subscriptions.push(previewToSide, preview, graphvizPreviewGenerator);
+    context.subscriptions.push(/* previewToSide,  */preview, graphvizPreviewGenerator);
 }
 
 async function getDotDocument(dotDocumentUri: Uri | undefined): Promise<TextDocument> {
     if (dotDocumentUri) {
-        return await workspace.openTextDocument(dotDocumentUri);
+        return (await workspace.openTextDocument(dotDocumentUri)).textDocument;
     } else {
         if (window.activeTextEditor?.document.languageId === DOT) {
-            return window.activeTextEditor.document;
+            return window.activeTextEditor.document.textDocument;
         }
         else {
             return undefined;

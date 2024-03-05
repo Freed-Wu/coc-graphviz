@@ -1,10 +1,12 @@
-import { ExtensionContext, Uri, Webview } from "vscode";
+import { ExtensionContext, Uri/* , Webview */ } from "coc.nvim";
+import { Webview } from "coc-webview";
 var fs = require("fs");
+import { resolve } from "path";
 
 export const CONTENT_FOLDER = "content";
 
 export async function getPreviewTemplate(context: ExtensionContext, templateName: string): Promise<string> {
-    let previewPath = Uri.joinPath(context.extensionUri, CONTENT_FOLDER, templateName).fsPath;
+    let previewPath = /* Uri.joinPath */resolve(context.extensionPath/* extensionUri */, CONTENT_FOLDER, templateName)/* .fsPath */;
 
     return (await fs.promises.readFile(previewPath, { encoding: "utf-8", flag: 'r' })).toString();
 }
@@ -39,7 +41,7 @@ function isAbsoluteWebview(attribValue: string): boolean {
 }
 
 function getWebviewUri(extensionContext: ExtensionContext, relativePath: string, fileName: string, webview?: Webview): Uri {
-    return asWebviewUri(Uri.joinPath(extensionContext.extensionUri, relativePath, fileName), webview);
+    return asWebviewUri(/* Uri.joinPath */Uri.parse("file://" + resolve(extensionContext.extensionPath/* extensionUri */, relativePath, fileName)), webview);
 }
 
 function asWebviewUri(localUri: Uri, webview?: Webview): Uri {

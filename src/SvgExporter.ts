@@ -1,5 +1,5 @@
 import fs = require('fs');
-import { Uri, window, workspace } from 'vscode';
+import { Uri, window, workspace } from 'coc.nvim';
 import { graphviz } from "@hpcc-js/wasm";
 
 export class SvgExporter {
@@ -10,26 +10,26 @@ export class SvgExporter {
     async export(documentUri: Uri): Promise<void> {
         let svgDefaultUri = documentUri.with({path: documentUri.path + '.svg'});
 
-        let uri = await window.showSaveDialog({defaultUri: svgDefaultUri, saveLabel: "Save as SVG...",
-        filters: {
-            "SVG": ["svg"]
-        }});
-
-        if (!uri) return;
-
-        let svg = await this.renderSvgString(documentUri);
-
-        fs.writeFile(uri.fsPath, svg, 'utf8', err => {
-            if (err) {
-                window.showErrorMessage("Cannot export to file " + uri.fsPath);
-                console.log(err);
-            }
-        });
+        // let uri = await window.showSaveDialog({defaultUri: svgDefaultUri, saveLabel: "Save as SVG...",
+        // filters: {
+        //     "SVG": ["svg"]
+        // }});
+        //
+        // if (!uri) return;
+        //
+        // let svg = await this.renderSvgString(documentUri);
+        //
+        // fs.writeFile(uri.fsPath, svg, 'utf8', err => {
+        //     if (err) {
+        //         window.showErrorMessage("Cannot export to file " + uri.fsPath);
+        //         console.log(err);
+        //     }
+        // });
     }
 
     protected async renderSvgString(documentUri: Uri): Promise<string> {
         let doc = await workspace.openTextDocument(documentUri);
-        let graphVizText = doc.getText();
+        let graphVizText = doc.textDocument.getText();
         let svg = await graphviz.dot(graphVizText);
         return svg;
     }
