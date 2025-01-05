@@ -1,5 +1,31 @@
 # Graphviz Support
 
+Ported from [vscode-graphviz](https://github.com/joaompinto/vscode-graphviz).
+
+![graphvizPreview](https://github.com/Freed-Wu/coc-graphviz/assets/32936898/4b96d161-59a9-46ca-82bf-fecc4780bbd0)
+
+Because some APIs of [vscode](github.com/microsoft/vscode) are missing in
+[coc.nvim](https://github.com/neoclide/coc.nvim), disable some features
+temporarily:
+
+- command `graphviz.previewToSide`: miss `vscode.ViewColumn`
+- save as svg: miss `vscode.window.showSaveDiaglog()`
+
+## Install
+
+- [coc-marketplace](https://github.com/fannheyward/coc-marketplace)
+- [npm](https://www.npmjs.com/package/coc-graphviz)
+- vim:
+
+```vim
+" command line
+CocInstall coc-graphviz
+" or add the following code to your vimrc
+let g:coc_global_extensions = ['coc-graphviz', 'other coc-plugins']
+```
+
+---
+
 A vscode extension that provides language support and live preview for the Graphviz format.
 
 The preview uses the [@hpcc-js/wasm](https://github.com/hpcc-systems/hpcc-js-wasm) library.
